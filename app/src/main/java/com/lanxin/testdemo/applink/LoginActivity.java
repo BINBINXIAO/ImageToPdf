@@ -20,7 +20,7 @@ public class LoginActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 Intent intent=new Intent(Intent.ACTION_VIEW);
-                intent.setData(Uri.parse("njinfocenter://v1/app?lx_open_client=1&id=11927552&oid=6815744&url=http%3A%2F%2F180.101.236.117%3A8081%2Fphone%2F%3Flx_fullscreen%3Dtrue%23%2FMobileLayout%2FHomePage%2Fcomprehensive"));
+                intent.setData(Uri.parse("njinfocenter://v1/app?lx_app"));
                 startActivity(intent);
             }
         });
