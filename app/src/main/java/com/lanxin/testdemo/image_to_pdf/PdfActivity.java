@@ -10,12 +10,18 @@ import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import com.itextpdf.kernel.geom.PageSize;
 import com.itextpdf.kernel.pdf.PdfWriter;
 import com.itextpdf.layout.Document;
+import com.itextpdf.layout.property.HorizontalAlignment;
 import com.lanxin.testdemo.R;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -31,7 +37,7 @@ import androidx.appcompat.app.AppCompatActivity;
 public class PdfActivity extends AppCompatActivity {
 
     private LinearLayout llContentView;
-    private TextView tvImage, tvPdf;
+    private TextView tvImage, tvPdf, tvLocalFile;
     private List<String> imagePathList = new ArrayList<>();
 
     @Override
@@ -40,6 +46,7 @@ public class PdfActivity extends AppCompatActivity {
         setContentView(R.layout.activity_pdf);
         tvImage = findViewById(R.id.tvImage);
         tvPdf = findViewById(R.id.tvPdf);
+        tvLocalFile = findViewById(R.id.tvLocalFile);
         llContentView = findViewById(R.id.llContentView);
         tvImage.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -90,18 +97,46 @@ public class PdfActivity extends AppCompatActivity {
                 try {
                     com.itextpdf.kernel.pdf.PdfWriter writer = new com.itextpdf.kernel.pdf.PdfWriter(pdf_Path);
                     com.itextpdf.kernel.pdf.PdfDocument pdf = new com.itextpdf.kernel.pdf.PdfDocument(writer);
-                    com.itextpdf.layout.Document document =  new com.itextpdf.layout.Document(pdf);
+                    com.itextpdf.layout.Document document = new com.itextpdf.layout.Document(pdf, PageSize.A3);
 
                     for (File file : pdf_imageList) {
-                        com.itextpdf.io.image.ImageData imageData = com.itextpdf.io.image.ImageDataFactory.create(file.getAbsolutePath());
-                        com.itextpdf.layout.element.Image image = new com.itextpdf.layout.element.Image(imageData)
-                                .setWidth(pdf.getDefaultPageSize().getWidth()-36);
-                        document.add(image);
-//                        document.add(new Paragraph("\n"));
+                        byte[] bytes = streamToByteArray(new FileInputStream(file));
+                        if (bytes != null) {
+                            com.itextpdf.io.image.ImageData imageData = com.itextpdf.io.image.ImageDataFactory.create(bytes);
+//                        PageSize pageSize = new PageSize(imageData.getWidth(), imageData.getHeight());
+//                        pdf.setDefaultPageSize(pageSize);
+
+                            com.itextpdf.layout.element.Image image = new com.itextpdf.layout.element.Image(imageData);
+                            PageSize pageSize = pdf.getDefaultPageSize();
+                            float pageWidth = pageSize.getWidth();
+                            float pageHeight = pageSize.getHeight();
+                            float imageWidth = imageData.getWidth();
+                            float imageHeight = imageData.getHeight();
+                            if (pageWidth < imageWidth || pageHeight < imageHeight) {
+                                //纸张都比图片小
+                                //缩放图片
+                                do {
+                                    //每次缩放0.8
+                                    float scale = 0.95f;
+                                    imageHeight = imageHeight * scale;
+                                    imageWidth = imageWidth * scale;
+                                } while (pageWidth < imageWidth || pageHeight < imageHeight);
+                            }
+
+                            image.scaleToFit(imageWidth, imageHeight);
+//                        image.setHeight(imageHeight);
+//                        image.setWidth(imageWidth);
+//                        image.setAutoScaleHeight(true);
+                            image.setHorizontalAlignment(HorizontalAlignment.CENTER);
+                            document.setMargins(10, 10, 10, 10);
+                            document.add(image);
+                        }
                     }
 
                     document.close();
                 } catch (FileNotFoundException | MalformedURLException e) {
+                    e.printStackTrace();
+                } catch (Exception e) {
                     e.printStackTrace();
                 }
 
@@ -135,9 +170,38 @@ public class PdfActivity extends AppCompatActivity {
 //                }
             }
         });
+
+
+        tvLocalFile.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+                intent.setType("*/*");
+                intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
+                startActivityForResult(intent, 222);
+            }
+        });
     }
 
-    @Override
+    public static byte[] streamToByteArray(InputStream is) throws Exception {
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        try {
+            byte[] b = new byte[1024];
+            int len;
+            while ((len = is.read(b)) != -1) {
+                bos.write(b, 0, len);
+            }
+            bos.flush();
+            return bos.toByteArray();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            bos.close();
+        }
+        return null;
+    }
+
+    @Override9
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == 111 && resultCode == RESULT_OK && data != null) {
