@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/llContentView"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <TextView
+        android:id="@+id/tvImage"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#99347AFC"
+        android:gravity="center"
+        android:padding="30dp"
+        android:text="1获取图片"
+        android:textColor="#000000"
+        android:textSize="15dp" />
+
+    <TextView
+        android:id="@+id/tvPdf"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#99347AFC"
+        android:gravity="center"
+        android:padding="30dp"
+        android:text="2PDF生成"
+        android:textColor="#000000"
+        android:textSize="15dp" />
+</LinearLayout>
